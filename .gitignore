@@ -226,3 +226,5 @@ dmypy.json
 cython_debug/
 
 .idea/
+
+secret_info
