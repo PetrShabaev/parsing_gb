@@ -4,21 +4,31 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import time
+from selenium import webdriver
 
 
 def get_vacancy_name():
     return input('Введите название вакансии или ключевое слово')
 
 
-def get_request(url, params, headers):
-    request = requests.get(url, params=params, headers=headers)
-    if request.status_code == 200:
-        return request
-    return None
+def get_request(url):
+    driver = webdriver.Chrome(
+        executable_path="chromedriver.exe"
+    )
+    try:
+        driver.get(url=url)
+        time.sleep(3)
+        html = driver.page_source
+    except Exception as e:
+        print(e)
+    finally:
+        driver.close()
+        driver.quit()
+    return html
 
 
 def get_dom(request):
-    return BeautifulSoup(request.content, "html.parser")
+    return BeautifulSoup(request, "html.parser")
 
 
 def get_data(soup):
@@ -46,7 +56,7 @@ def get_data(soup):
                 min_salary_border = "Не указана"
                 max_salary_border = salary_list_info[1]
                 salary_currency = salary_list_info[2]
-        except AttributeError as e:
+        except AttributeError:
             min_salary_border = "Не указана"
             max_salary_border = "Не указана"
             salary_currency = "Не указано"
@@ -69,22 +79,22 @@ def main():
         "text": get_vacancy_name(),
         "page": 0,
     }
-    URL = "https://spb.hh.ru/search/vacancy"
-    HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/102.0.5005.167 YaBrowser/22.7.5.1027 Yowser/2.5 Safari/537.36"
-    }
+    URL = f"https://spb.hh.ru/search/vacancy?search_field=name&search_field=company_name&search_field=description&" \
+          f"text={PARAMS['text']}&from=suggest_post&page={PARAMS['page']}"
     vacancies_list = []
     while True:
-        request = get_request(URL, PARAMS, HEADERS)
+        request = get_request(URL)
         soup = get_dom(request)
         if soup.find('div', attrs={"class": "serp-item"}) is not None:
             vacancies_list.extend(get_data(soup))
-            PARAMS["page"] += 1
             # pprint(vacancies_list)
-            time.sleep(1)
         else:
             break
+        PARAMS["page"] += 1
+        print(PARAMS["page"])
+        URL = f"https://spb.hh.ru/search/vacancy?search_field=name&search_field=company_name&search_field=" \
+              f"description&text={PARAMS['text']}&from=suggest_post&page={PARAMS['page']}"
+        print(URL)
 
 
 if __name__ == "__main__":

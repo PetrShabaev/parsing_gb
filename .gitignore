@@ -228,3 +228,5 @@ cython_debug/
 .idea/
 
 secret_info
+
+lesson_2/chromedriver.exe
