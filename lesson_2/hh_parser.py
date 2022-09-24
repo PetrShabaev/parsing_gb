@@ -1,6 +1,3 @@
-from pprint import pprint
-import lxml
-import requests
 from bs4 import BeautifulSoup
 import json
 import time
@@ -12,6 +9,7 @@ def get_vacancy_name():
 
 
 def get_request(url):
+    html = None
     driver = webdriver.Chrome(
         executable_path="chromedriver.exe"
     )
@@ -45,22 +43,23 @@ def get_data(soup):
             salary = vacancy.find("span", "bloko-header-section-3").get_text()
             salary_list_info = salary.split(' ')
             if " – " in salary:
-                min_salary_border = salary_list_info[0]
-                max_salary_border = salary_list_info[2]
+                min_salary_border = salary_list_info[0].replace(" ", '')
+                max_salary_border = salary_list_info[2].replace(" ", '')
                 salary_currency = salary_list_info[3]
             elif "от" in salary:
-                min_salary_border = salary_list_info[1]
-                max_salary_border = "Не указана"
+                min_salary_border = salary_list_info[1].replace(" ", '')
+                max_salary_border = None
                 salary_currency = salary_list_info[2]
             elif "до" in salary:
-                min_salary_border = "Не указана"
-                max_salary_border = salary_list_info[1]
+                min_salary_border = None
+                max_salary_border = salary_list_info[1].replace(" ", '')
                 salary_currency = salary_list_info[2]
         except AttributeError:
-            min_salary_border = "Не указана"
-            max_salary_border = "Не указана"
-            salary_currency = "Не указано"
-        employer = vacancy.find('a', attrs={'data-qa': 'vacancy-serp__vacancy-employer'}).get_text()
+            min_salary_border = None
+            max_salary_border = None
+            salary_currency = None
+        employer = vacancy.find('a', attrs={'data-qa': 'vacancy-serp__vacancy-employer'}).get_text().\
+            replace(" ", ' ')
 
         vacancies_per_page.append({
             'vacancy_name': vacancy_name,
@@ -91,11 +90,10 @@ def main():
         else:
             break
         PARAMS["page"] += 1
-        print(PARAMS["page"])
         URL = f"https://spb.hh.ru/search/vacancy?search_field=name&search_field=company_name&search_field=" \
               f"description&text={PARAMS['text']}&from=suggest_post&page={PARAMS['page']}"
-        print(URL)
-
+    with open("vacancies.json", "w", encoding="utf-8") as file:
+        json.dump(vacancies_list, file, indent=4, ensure_ascii=False)
 
 if __name__ == "__main__":
     main()
