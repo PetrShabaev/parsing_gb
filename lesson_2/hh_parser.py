@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import json
 import time
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 def get_vacancy_name():
@@ -10,8 +11,10 @@ def get_vacancy_name():
 
 def get_request(url):
     html = None
+    options = Options()
+    options.add_argument("--headless")
     driver = webdriver.Chrome(
-        executable_path="chromedriver.exe"
+        executable_path="chromedriver.exe", options=options
     )
     try:
         driver.get(url=url)
@@ -43,23 +46,26 @@ def get_data(soup):
             salary = vacancy.find("span", "bloko-header-section-3").get_text()
             salary_list_info = salary.split(' ')
             if " – " in salary:
-                min_salary_border = salary_list_info[0].replace(" ", '')
-                max_salary_border = salary_list_info[2].replace(" ", '')
+                min_salary_border = int(salary_list_info[0].replace(" ", ''))
+                max_salary_border = int(salary_list_info[2].replace(" ", ''))
                 salary_currency = salary_list_info[3]
             elif "от" in salary:
-                min_salary_border = salary_list_info[1].replace(" ", '')
+                min_salary_border = int(salary_list_info[1].replace(" ", ''))
                 max_salary_border = None
                 salary_currency = salary_list_info[2]
             elif "до" in salary:
                 min_salary_border = None
-                max_salary_border = salary_list_info[1].replace(" ", '')
+                max_salary_border = int(salary_list_info[1].replace(" ", ''))
                 salary_currency = salary_list_info[2]
         except AttributeError:
             min_salary_border = None
             max_salary_border = None
             salary_currency = None
-        employer = vacancy.find('a', attrs={'data-qa': 'vacancy-serp__vacancy-employer'}).get_text().\
-            replace(" ", ' ')
+        try:
+            employer = vacancy.find('a', attrs={'data-qa': 'vacancy-serp__vacancy-employer'}).get_text().\
+                replace(" ", ' ')
+        except AttributeError:
+            employer = "Не указан"
 
         vacancies_per_page.append({
             'vacancy_name': vacancy_name,
@@ -94,6 +100,7 @@ def main():
               f"description&text={PARAMS['text']}&from=suggest_post&page={PARAMS['page']}"
     with open("vacancies.json", "w", encoding="utf-8") as file:
         json.dump(vacancies_list, file, indent=4, ensure_ascii=False)
+
 
 if __name__ == "__main__":
     main()
