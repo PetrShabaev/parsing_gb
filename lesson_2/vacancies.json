@@ -15998,5 +15998,13 @@
         "max_salary_border": 4500,
         "salary_currency": "EUR",
         "employer": "Silverbird"
+    },
+        {
+        "vacancy_name": "Senior pentest engineer",
+        "vacancy_link": "https://spb.hh.ru/vacancy/694114437777?from=vacancy_search_list&hhtmFrom=vacancy_search_list&query=python",
+        "min_salary_border": 2000,
+        "max_salary_border": 4500,
+        "salary_currency": "EUR",
+        "employer": "Silverbird"
     }
 ]
