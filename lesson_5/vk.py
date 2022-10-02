@@ -23,6 +23,9 @@ POST_TEXT_XPATH = './/div[contains(@class,"post_text")]/text()'
 POST_LIKES_XPATH = './/div[contains(@class,"like_btns")]//span[contains(@class,"count")]/div/text()'
 POST_SHARE_XPATH = './/div[contains(@class,"share")]/span[contains(@class,"count")]/text()'
 POST_VIEWS_XPATH = './/div[contains(@class,"like_views")]/@title'
+POST_MEDIA_XPATH = './/div[contains(@class,"page_post_sized_thumbs")]/a'
+POST_VIDEO_XPATH = './/div[contains(@class,"page_post_sized_thumbs")]/a/@href'
+POST_PHOTO_XPATH = './/div[contains(@class,"page_post_sized_thumbs")]/a/@style'
 
 
 def write_data(post):
@@ -66,6 +69,16 @@ def get_data():
                 post_views = int(post[1].xpath(POST_VIEWS_XPATH)[0].split(' ')[0])
             except:
                 post_views = None
+            try:
+                if post[1].xpath(POST_VIDEO_XPATH):
+                    post_media_link = DOMAIN + post[1].xpath(POST_VIDEO_XPATH)[0]
+                else:
+                    post_media_link_raw = post[1].xpath(POST_PHOTO_XPATH)
+                    post_media_link = []
+                    for link in post_media_link_raw:
+                        post_media_link.append(link.split('url')[1].replace('(', '').replace(')', ''))
+            except:
+                post_media_link = None
 
             post = {
                 '_id': post[0] + 1,
@@ -74,7 +87,8 @@ def get_data():
                 'post_text':  post_text,
                 'post_likes': post_likes,
                 'post_share':  post_share,
-                'post_views': post_views
+                'post_views': post_views,
+                'post_media_link': post_media_link
             }
 
             write_data(post)
@@ -115,6 +129,7 @@ def get_page_source(search_word):
             except Exception:
                 print('------')
             posts = driver.find_elements(By.XPATH, SEARCH_POSTS_XPATH)
+            print(len(posts))
             if not posts:
                 break
             actions = ActionChains(driver)
