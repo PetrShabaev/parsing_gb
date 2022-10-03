@@ -43,11 +43,11 @@ class SuperJobSpider(scrapy.Spider):
                 callback=self.parse_item
             )
 
-        # next_page_link = 'https://russia.superjob.ru/' +\
-        #                  response.xpath('//a[contains(@rel,"next") '
-        #                                 'and contains(@class,"dalshe")]/@href').get()
-        # if next_page_link:
-        #     yield response.follow(
-        #         next_page_link,
-        #         callback=self.parse
-        #     )
+        next_page_link = 'https://russia.superjob.ru/' +\
+                         response.xpath('//a[contains(@rel,"next") '
+                                        'and contains(@class,"dalshe")]/@href').get()
+        if next_page_link:
+            yield response.follow(
+                next_page_link,
+                callback=self.parse
+            )

@@ -64,5 +64,4 @@ class JobparserPipeline:
         else:
             self.parse_salary_sj(item)
 
-
         return item
