@@ -6,6 +6,11 @@
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
+from pymongo import MongoClient
+
+MONGO_LOCALHOST = 'localhost'
+MONGO_PORT = 27017
+MONGO_DB = 'scrapy_vacancies'
 
 
 class JobparserPipeline:
@@ -23,13 +28,13 @@ class JobparserPipeline:
             item['salary_min'] = None
             item['salary_max'] = None
         elif 'от ' == item['salary'][0] and ' до ' == item['salary'][2]:
-            item['salary_min'] = item['salary'][1].replace('\xa0', '')
-            item['salary_max'] = item['salary'][3].replace('\xa0', '')
+            item['salary_min'] = int(item['salary'][1].replace('\xa0', ''))
+            item['salary_max'] = int(item['salary'][3].replace('\xa0', ''))
         elif 'до ' == item['salary'][0]:
             item['salary_min'] = None
-            item['salary_max'] = item['salary'][1].replace('\xa0', '')
+            item['salary_max'] = int(item['salary'][1].replace('\xa0', ''))
         else:
-            item['salary_min'] = item['salary'][1].replace('\xa0', '')
+            item['salary_min'] = int(item['salary'][1].replace('\xa0', ''))
             item['salary_max'] = None
 
     def parse_salary_sj(self, item):
@@ -56,6 +61,13 @@ class JobparserPipeline:
                 item['salary_max'] = item['salary'][0].replace('\xa0', '').replace('\xa0', '')
                 item['currency'] = self.get_salary_currency(item['currency'])
 
+    def write_data(self, item, spider):
+        with MongoClient(MONGO_LOCALHOST, MONGO_PORT) as client:
+            db = client[MONGO_DB]
+            collection = db[spider.name]
+
+            collection.insert_one(item)
+
     def process_item(self, item, spider):
         item['title'] = self.convert_string_list_to_string(item['title'])
         if spider.name == 'hh':
@@ -63,5 +75,7 @@ class JobparserPipeline:
             item['currency'] = self.get_salary_currency(item['currency'])
         else:
             self.parse_salary_sj(item)
+        del item['salary']
+        self.write_data(item, spider)
 
         return item

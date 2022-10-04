@@ -17,13 +17,15 @@ class SuperJobSpider(scrapy.Spider):
         'currency': '//h1//following-sibling::span/span[1]/text()'
     }
 
-    def __init__(self, query_text):
+    def __init__(self, query_text, _id):
         super().__init__()
         start_url = SJ_URL_TEMPLATE + query_text
         self.start_urls = [start_url]
+        self._id = _id
 
-    def parse_item(self, response: TextResponse):
+    def parse_item(self, response: TextResponse, **kwargs):
         item = JobparserItem()
+        item['_id'] = kwargs['_id']
         print()
         for field, xpath_rout in self.xpath_routs_for_parse_item.items():
             item[field] = response.xpath(xpath_rout).getall()
@@ -32,15 +34,16 @@ class SuperJobSpider(scrapy.Spider):
         item['url'] = response.url
         yield item
 
-    def parse(self, response):
+    def parse(self, response: TextResponse, **kwargs):
         items = response.xpath('//div[contains(@class,"f-test-vacancy-item")]')
 
         for item in items:
+            self._id += 1
             url = item.xpath(self.xpath_routs_for_parse['url']).get()
-            # url = 'https://russia.superjob.ru/vakansii/inzhener-42940168.html'
             yield response.follow(
                 url,
-                callback=self.parse_item
+                callback=self.parse_item,
+                cb_kwargs={'_id': self._id}
             )
 
         next_page_link = 'https://russia.superjob.ru/' +\
@@ -49,5 +52,6 @@ class SuperJobSpider(scrapy.Spider):
         if next_page_link:
             yield response.follow(
                 next_page_link,
-                callback=self.parse
+                callback=self.parse,
+                cb_kwargs={'_id': self._id}
             )

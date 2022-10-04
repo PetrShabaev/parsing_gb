@@ -7,6 +7,7 @@ import scrapy
 
 
 class JobparserItem(scrapy.Item):
+    _id = scrapy.Field()
     title = scrapy.Field()
     url = scrapy.Field()
     salary = scrapy.Field()

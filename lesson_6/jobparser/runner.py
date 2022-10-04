@@ -9,14 +9,16 @@ if __name__ == '__main__':
     crawler_settings = Settings()
     crawler_settings.setmodule(settings)
 
-    # spider_hh_init_kwargs = {
-    #     "query_text": input("Введите запрос")
-    # }
-    spider_superjob_init_kwargs = {
-        "query_text": input("Введите запрос")
+    spider_hh_init_kwargs = {
+        "query_text": input("Введите запрос"),
+        "_id": 0
     }
+    # spider_superjob_init_kwargs = {
+    #     "query_text": input("Введите запрос"),
+    #     "_id": 0
+    # }
 
     process = CrawlerProcess(settings=crawler_settings)
-    # process.crawl(HhSpider, **spider_hh_init_kwargs)
-    process.crawl(SuperJobSpider, **spider_superjob_init_kwargs)
+    process.crawl(HhSpider, **spider_hh_init_kwargs)
+    # process.crawl(SuperJobSpider, **spider_superjob_init_kwargs)
     process.start()

@@ -21,30 +21,32 @@ class HhSpider(scrapy.Spider):
         'currency': '//span[contains(@data-qa,"-salary")]/text()'
     }
 
-    def __init__(self, query_text, **kwargs):
+    def __init__(self, query_text, _id):
         super().__init__()
         start_url = HH_URL_TEMPLATE + query_text
         self.start_urls = [start_url]
+        self._id = _id
 
-    def parse_item(self, response: TextResponse):
+    def parse_item(self, response: TextResponse, **kwargs):
         item = JobparserItem()
-
+        item['_id'] = kwargs['_id']
         for field, xpath_rout in self.xpath_routs_for_parse_item.items():
             item[field] = response.xpath(xpath_rout).getall()
         item['source'] = 'hh'
         item['url'] = response.url
-
         yield item
 
-    def parse(self, response: TextResponse):
+    def parse(self, response: TextResponse, **kwargs):
         items = response.xpath('//div[@class="serp-item"]')
         for item in items:
+            self._id += 1
             url = item.xpath(self.xpath_routs_for_parse['url']).get()
             yield response.follow(
                 url,
-                callback=self.parse_item
+                callback=self.parse_item,
+                cb_kwargs={'_id': self._id}
             )
         next_page_link = response.xpath('//a[@data-qa="pager-next"]/@href').get()
         if next_page_link:
-            yield response.follow(next_page_link, callback=self.parse())
+            yield response.follow(next_page_link, callback=self.parse, cb_kwargs={'_id': self._id})
 
